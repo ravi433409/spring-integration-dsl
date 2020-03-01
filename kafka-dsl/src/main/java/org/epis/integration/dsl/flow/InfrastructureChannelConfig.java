@@ -1,6 +1,7 @@
 package org.epis.integration.dsl.flow;
 
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Description;
 import org.springframework.integration.channel.DirectChannel;
@@ -12,6 +13,7 @@ import org.springframework.messaging.PollableChannel;
 
 @Configuration
 @EnableIntegration
+@ComponentScan(basePackageClasses = { InfrastructureChannelConfig.class })
 public class InfrastructureChannelConfig {
 
 	@Bean
@@ -19,6 +21,16 @@ public class InfrastructureChannelConfig {
 	public MessageChannel requestChannel() {
 		return new DirectChannel();
 	}
+	
+	
+	@Bean
+	@Description("Entry to the messaging system through the gateway.")
+	public MessageChannel fromKafka() {
+		return new DirectChannel();
+	}
+	
+	
+	
 
 	@Bean
 	@Description("Sends request messages to the web service outbound gateway")

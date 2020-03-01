@@ -35,15 +35,15 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.expression.common.LiteralExpression;
-import org.springframework.integration.annotation.IntegrationComponentScan;
 import org.springframework.integration.annotation.ServiceActivator;
+import org.springframework.integration.config.EnableIntegration;
 import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.integration.dsl.context.IntegrationFlowContext;
 import org.springframework.integration.kafka.dsl.Kafka;
 import org.springframework.integration.kafka.outbound.KafkaProducerMessageHandler;
+import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -55,31 +55,23 @@ import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.support.GenericMessage;
 
 @SpringBootApplication
+@EnableIntegration
+@ComponentScan(basePackages = "org.epis.integration.dsl.app")
+@EnableAutoConfiguration
 @EnableConfigurationProperties(KafkaAppProperties.class)
 public class Application {
 
 	@Autowired
 	private KafkaAppProperties properties;
-	
+
 	@Autowired
 	private IntegrationFlowContext flowContext;
-
-
-	/*
-	 * @Autowired
-	 * 
-	 * @Qualifier("kafkaInboundGatewayFlow") private IntegrationFlow
-	 * kafkaInboundGatewayFlow;
-	 */
-	
-	
-	
 
 	public static void main(String[] args) throws Exception {
 		ConfigurableApplicationContext context = new SpringApplicationBuilder(Application.class)
 				.web(WebApplicationType.NONE).run(args);
 		context.getBean(Application.class).runDemo(context);
-	//	 context.close();
+		// context.close();
 	}
 
 	private void runDemo(ConfigurableApplicationContext context) {
@@ -92,6 +84,11 @@ public class Application {
 		}
 		System.out.println("Sending a null message...");
 		toKafka.send(new GenericMessage<>(KafkaNull.INSTANCE, headers));
+		
+		
+		
+		
+
 
 		/*
 		 * PollableChannel fromKafka = context.getBean("fromKafka",
@@ -102,7 +99,7 @@ public class Application {
 		 */
 
 		System.out.println("Adding an adapter for a second topic and sending 10 messages...");
-		 addAnotherListenerForTopics(this.properties.getNewTopic());
+	//	addAnotherListenerForTopics(this.properties.getNewTopic());
 		headers = Collections.singletonMap(KafkaHeaders.TOPIC, this.properties.getNewTopic());
 		for (int i = 0; i < 10; i++) {
 			System.out.println("sent message " + "bar" + i);
@@ -132,38 +129,6 @@ public class Application {
 		return handler;
 	}
 
-	/*@Bean
-	public ConsumerFactory<?, ?> kafkaConsumerFactory(KafkaProperties properties) {
-		Map<String, Object> consumerProperties = properties.buildConsumerProperties();
-		consumerProperties.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 15000);
-		return new DefaultKafkaConsumerFactory<>(consumerProperties);
-	}*/
-
-	/*@Bean
-	public KafkaMessageListenerContainer<String, String> container(
-			ConsumerFactory<String, String> kafkaConsumerFactory) {
-		return new KafkaMessageListenerContainer<>(kafkaConsumerFactory,
-				new ContainerProperties(new TopicPartitionOffset(this.properties.getTopic(), 0)));
-	}*/
-
-	/*@Bean
-	public KafkaMessageDrivenChannelAdapter<String, String> adapter(
-			KafkaMessageListenerContainer<String, String> container) {
-		KafkaMessageDrivenChannelAdapter<String, String> kafkaMessageDrivenChannelAdapter = new KafkaMessageDrivenChannelAdapter<>(
-				container);
-		kafkaMessageDrivenChannelAdapter.setOutputChannel(fromKafka());
-		return kafkaMessageDrivenChannelAdapter;
-	}*/
-
-	/*@Bean
-	public PollableChannel fromKafka() {
-		return new QueueChannel();
-	}*/
-
-	/*
-	 * Boot's autoconfigured KafkaAdmin will provision the topics.
-	 */
-
 	@Bean
 	public NewTopic topic(KafkaAppProperties properties) {
 		return new NewTopic(properties.getTopic(), 1, (short) 1);
@@ -174,10 +139,6 @@ public class Application {
 		return new NewTopic(properties.getNewTopic(), 1, (short) 1);
 	}
 
-	/*
-	 * @Autowired private IntegrationFlowContext flowContext;
-	 */
-
 	@Autowired
 	private KafkaProperties kafkaProperties;
 
@@ -186,26 +147,28 @@ public class Application {
 		// change the group id so we don't revoke the other partitions.
 		consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG,
 				consumerProperties.get(ConsumerConfig.GROUP_ID_CONFIG) + "x");
-		
-		  IntegrationFlow flow = IntegrationFlows
-		  .from(Kafka.messageDrivenChannelAdapter( new
-		  DefaultKafkaConsumerFactory<String, String>(consumerProperties), topics))
-		  .channel("requestChannel") .transform(new PatientDataTransformer())
-		  .split(new PatientDataSplitter()) .handle(new PatientServiceActivator())
-		  .get();
-		  
-			this.flowContext.registration(flow).register();
 
-		 
+		// TODO as per new latest api spring integration flow registration need to be done dynamically 
+		IntegrationFlow flow = IntegrationFlows
+				.from(Kafka.messageDrivenChannelAdapter(
+						new DefaultKafkaConsumerFactory<String, String>(consumerProperties), "topic2"))
+				.channel("requestChannel").transform(new PatientDataTransformer()).split(new PatientDataSplitter())
+				.handle(new PatientServiceActivator()).get();
+
+		this.flowContext.registration(flow).register();
 
 	}
+	
+	
+	@Bean
+	public IntegrationFlow fromKafkaFlow(ConsumerFactory<?, ?> consumerFactory) {
+		return IntegrationFlows
+				.from(Kafka.messageDrivenChannelAdapter(
+						new DefaultKafkaConsumerFactory<String, String>(kafkaProperties.buildConsumerProperties()),
+						"topic1"))
+				.channel("fromKafka").transform(new PatientDataTransformer()).split(new PatientDataSplitter())
+				.handle(new PatientServiceActivator()).get();
+	}
 
-	/*
-	 * @PostConstruct public void postConstruct() {
-	 * 
-	 * this.flowContext.registration(kafkaInboundGatewayFlow).register();
-	 * 
-	 * }
-	 */
 
 }
