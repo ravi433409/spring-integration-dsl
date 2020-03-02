@@ -1,6 +1,6 @@
 package org.epis.integration.dsl.gateway;
 
-import org.epis.integration.dsl.app.KafkaAppProperties;
+import org.epis.integration.dsl.KafkaAppProperties;
 import org.epis.integration.dsl.endpoint.PatientDataSplitter;
 import org.epis.integration.dsl.endpoint.PatientDataTransformer;
 import org.epis.integration.dsl.endpoint.PatientServiceActivator;
@@ -42,7 +42,7 @@ public class InboundGatewayConfig {
 	@Qualifier("consumerChannel")
 	private PollableChannel consumerChannel;
 	
-	@Bean
+	//@Bean
 	public IntegrationFlow fromKafkaFlow(ConsumerFactory<?, ?> consumerFactory) {
 		return IntegrationFlows
 				.from(Kafka.messageDrivenChannelAdapter(

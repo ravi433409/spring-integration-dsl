@@ -1,6 +1,6 @@
 kafka:
   topic: topic1
-  newTopic: topic2
+  newTopic: topic1
   messageKey: si.key
 spring:
   kafka:

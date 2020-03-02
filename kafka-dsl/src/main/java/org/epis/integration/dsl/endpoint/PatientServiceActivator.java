@@ -12,10 +12,10 @@ public class PatientServiceActivator {
 	private final Logger logger = LoggerFactory.getLogger(PatientServiceActivator.class);
 
 	@ServiceActivator(inputChannel = "consumerChannel", outputChannel= "requestChannel")
-	public void getPatientData(String message, @Header("CARGO_BATCH_ID") long batchId) {
-		  System.out.println("success activator message");
+	public void getPatientData(String message) {
+		  System.out.println("success activator message"+message);
 
-		logger.debug("Message in Batch[" + batchId + "] is received with payload : " + message);
+	//	logger.debug("Message in Batch[" + batchId + "] is received with payload : " + message);
 	}
 
 }

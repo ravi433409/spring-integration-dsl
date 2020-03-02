@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.epis.integration.dsl.app;
+package org.epis.integration.dsl;
 
 import java.util.Collections;
 import java.util.Map;
@@ -49,7 +49,6 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.KafkaHeaders;
-import org.springframework.kafka.support.KafkaNull;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.support.GenericMessage;
@@ -83,7 +82,7 @@ public class Application {
 			toKafka.send(new GenericMessage<>("foo" + i, headers));
 		}
 		System.out.println("Sending a null message...");
-		toKafka.send(new GenericMessage<>(KafkaNull.INSTANCE, headers));
+	//	toKafka.send(new GenericMessage<>(KafkaNull.INSTANCE, headers));
 		
 		
 		
@@ -99,7 +98,7 @@ public class Application {
 		 */
 
 		System.out.println("Adding an adapter for a second topic and sending 10 messages...");
-	//	addAnotherListenerForTopics(this.properties.getNewTopic());
+		addAnotherListenerForTopics(this.properties.getNewTopic());
 		headers = Collections.singletonMap(KafkaHeaders.TOPIC, this.properties.getNewTopic());
 		for (int i = 0; i < 10; i++) {
 			System.out.println("sent message " + "bar" + i);
@@ -151,7 +150,7 @@ public class Application {
 		// TODO as per new latest api spring integration flow registration need to be done dynamically 
 		IntegrationFlow flow = IntegrationFlows
 				.from(Kafka.messageDrivenChannelAdapter(
-						new DefaultKafkaConsumerFactory<String, String>(consumerProperties), "topic2"))
+						new DefaultKafkaConsumerFactory<String, String>(consumerProperties), "topic1", "topic2"))
 				.channel("requestChannel").transform(new PatientDataTransformer()).split(new PatientDataSplitter())
 				.handle(new PatientServiceActivator()).get();
 
@@ -161,11 +160,11 @@ public class Application {
 	
 	
 	@Bean
-	public IntegrationFlow fromKafkaFlow(ConsumerFactory<?, ?> consumerFactory) {
+	public IntegrationFlow fromKafkaFlow1(ConsumerFactory<?, ?> consumerFactory) {
 		return IntegrationFlows
 				.from(Kafka.messageDrivenChannelAdapter(
 						new DefaultKafkaConsumerFactory<String, String>(kafkaProperties.buildConsumerProperties()),
-						"topic1"))
+						"topic1",	"topic2"))
 				.channel("fromKafka").transform(new PatientDataTransformer()).split(new PatientDataSplitter())
 				.handle(new PatientServiceActivator()).get();
 	}
