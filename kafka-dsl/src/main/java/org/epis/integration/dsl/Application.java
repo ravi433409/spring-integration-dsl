@@ -22,9 +22,10 @@ import java.util.Map;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.epis.integration.dsl.endpoint.PatientDataSplitter;
-import org.epis.integration.dsl.endpoint.PatientDataTransformer;
-import org.epis.integration.dsl.endpoint.PatientServiceActivator;
+import org.epis.integration.dsl.dao.SavePatientDao;
+import org.epis.integration.dsl.splitter.PatientDataSplitter;
+import org.epis.integration.dsl.transformer.PatientDataTransformer;
+import org.epis.integration.dsl.ws.PatientServiceActivator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -43,7 +44,6 @@ import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.integration.dsl.context.IntegrationFlowContext;
 import org.springframework.integration.kafka.dsl.Kafka;
 import org.springframework.integration.kafka.outbound.KafkaProducerMessageHandler;
-import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -77,9 +77,16 @@ public class Application {
 		MessageChannel toKafka = context.getBean("toKafka", MessageChannel.class);
 		System.out.println("Sending 10 messages...");
 		Map<String, Object> headers = Collections.singletonMap(KafkaHeaders.TOPIC, this.properties.getTopic());
-		for (int i = 0; i < 10; i++) {
+		for (int i = 1000; i < 1030; i++) {
 			System.out.println("sent message " + "foo" + i);
-			toKafka.send(new GenericMessage<>("foo" + i, headers));
+			int patientId = i;
+			String inputMessage1 = "<PatientID><id>"+patientId+++"</id></PatientID> ";
+			String inputMessage2 = "<PatientID><id>"+patientId+++"</id></PatientID> ";
+			String inputMessage3 = "<PatientID><id>"+patientId+++"</id></PatientID> ";
+			
+			System.out.println("input message"+inputMessage1+inputMessage2+inputMessage3);
+			
+			toKafka.send(new GenericMessage<>(inputMessage1+inputMessage2+inputMessage3, headers));
 		}
 		System.out.println("Sending a null message...");
 	//	toKafka.send(new GenericMessage<>(KafkaNull.INSTANCE, headers));
@@ -148,26 +155,22 @@ public class Application {
 				consumerProperties.get(ConsumerConfig.GROUP_ID_CONFIG) + "x");
 
 		// TODO as per new latest api spring integration flow registration need to be done dynamically 
-		IntegrationFlow flow = IntegrationFlows
-				.from(Kafka.messageDrivenChannelAdapter(
-						new DefaultKafkaConsumerFactory<String, String>(consumerProperties), "topic1", "topic2"))
-				.channel("requestChannel").transform(new PatientDataTransformer()).split(new PatientDataSplitter())
-				.handle(new PatientServiceActivator()).get();
+		IntegrationFlow flow = fromKafkaFlow(consumerProperties);
 
 		this.flowContext.registration(flow).register();
 
 	}
-	
-	
-	@Bean
-	public IntegrationFlow fromKafkaFlow1(ConsumerFactory<?, ?> consumerFactory) {
-		return IntegrationFlows
+
+	private IntegrationFlow fromKafkaFlow(Map<String, Object> consumerProperties) {
+		IntegrationFlow flow = IntegrationFlows
 				.from(Kafka.messageDrivenChannelAdapter(
-						new DefaultKafkaConsumerFactory<String, String>(kafkaProperties.buildConsumerProperties()),
-						"topic1",	"topic2"))
-				.channel("fromKafka").transform(new PatientDataTransformer()).split(new PatientDataSplitter())
-				.handle(new PatientServiceActivator()).get();
+						new DefaultKafkaConsumerFactory<String, String>(consumerProperties), "topic1", "topic2"))
+				.channel("requestChannel").split(new PatientDataSplitter()).transform(new PatientDataTransformer())
+				.handle(new PatientServiceActivator()).handle(new SavePatientDao()).get();
+		return flow;
 	}
+	
+	
 
 
 }

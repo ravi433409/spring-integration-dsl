@@ -1,15 +1,13 @@
-package org.epis.integration.dsl.gateway;
+package org.epis.integration.dsl.config;
 
 import org.epis.integration.dsl.KafkaAppProperties;
-import org.epis.integration.dsl.endpoint.PatientDataSplitter;
-import org.epis.integration.dsl.endpoint.PatientDataTransformer;
-import org.epis.integration.dsl.endpoint.PatientServiceActivator;
-import org.epis.integration.dsl.flow.InfrastructureChannelConfig;
+import org.epis.integration.dsl.splitter.PatientDataSplitter;
+import org.epis.integration.dsl.transformer.PatientDataTransformer;
+import org.epis.integration.dsl.ws.PatientServiceActivator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.config.EnableIntegration;

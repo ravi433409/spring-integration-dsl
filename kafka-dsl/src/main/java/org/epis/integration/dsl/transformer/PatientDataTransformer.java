@@ -1,4 +1,4 @@
-package org.epis.integration.dsl.endpoint;
+package org.epis.integration.dsl.transformer;
 
 import org.springframework.integration.annotation.Transformer;
 import org.springframework.stereotype.Component;

@@ -1,3 +1,4 @@
+package org.epis.integration.dsl.config;
 /*package org.epis.integration.dsl.gateway;
 
 import org.springframework.context.annotation.Bean;
