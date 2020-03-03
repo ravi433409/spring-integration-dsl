@@ -1,9 +1,9 @@
 package org.epis.integration.dsl.config;
 
-import org.epis.integration.dsl.KafkaAppProperties;
+import org.epis.integration.dsl.common.KafkaAppProperties;
 import org.epis.integration.dsl.splitter.PatientDataSplitter;
 import org.epis.integration.dsl.transformer.PatientDataTransformer;
-import org.epis.integration.dsl.ws.PatientServiceActivator;
+import org.epis.integration.dsl.ws.PatientSoapServiceActivator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,16 +40,7 @@ public class InboundGatewayConfig {
 	@Qualifier("consumerChannel")
 	private PollableChannel consumerChannel;
 	
-	//@Bean
-	public IntegrationFlow fromKafkaFlow(ConsumerFactory<?, ?> consumerFactory) {
-		return IntegrationFlows
-				.from(Kafka.messageDrivenChannelAdapter(
-						new DefaultKafkaConsumerFactory<String, String>(kafkaProperties.buildConsumerProperties()),
-						"topic1"))
-				.channel("fromKafka").transform(new PatientDataTransformer()).split(new PatientDataSplitter())
-				.handle(new PatientServiceActivator()).get();
-	}
-
+	
 
 	
 	

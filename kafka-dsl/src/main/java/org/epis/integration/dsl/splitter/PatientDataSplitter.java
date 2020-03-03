@@ -13,7 +13,7 @@ public class PatientDataSplitter {
 	  @Splitter(inputChannel = "cargoGWDefaultRequestChannel", 
               outputChannel = "cargoSplitterOutputChannel")
   public Collection<String>  splitCargoList(String message) {
-		  System.out.println("success split message"+message);
+		  System.out.println("incoming messages from kafka broker"+message);
 		  String[] patientIds = message.split(" ");
 		  
 		  List<String> result = Arrays.asList(patientIds);

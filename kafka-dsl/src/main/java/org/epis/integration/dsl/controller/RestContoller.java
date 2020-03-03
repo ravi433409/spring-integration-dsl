@@ -6,9 +6,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class RestContoller {
 
-	@GetMapping("/employees")
+	@GetMapping("/rxData")
 	String getEmployeeData() {
-		return "{\"id\":1,\"content\":\"Hello, World!\"}";
+		return "{employeeid=10002, rxNumber=rxno1234543, storenum=abc123, daysSupply=2}";
 	}
 
 }

@@ -1,9 +1,9 @@
 package org.epis.integration.dsl.config;
 
-import org.epis.integration.dsl.KafkaAppProperties;
+import org.epis.integration.dsl.common.KafkaAppProperties;
 import org.epis.integration.dsl.splitter.PatientDataSplitter;
 import org.epis.integration.dsl.transformer.PatientDataTransformer;
-import org.epis.integration.dsl.ws.PatientServiceActivator;
+import org.epis.integration.dsl.ws.PatientSoapServiceActivator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
@@ -60,6 +60,12 @@ public class IntegrationFlowsConfig {
 	public MessageChannel dabaseStoreChannel() {
 		return new DirectChannel();
 	}
+	
+	
+	
+	
+//	@ServiceActivator(inputChannel = "consumerChannel", outputChannel= "requestChannel")
+
 
 	@Bean
 	@Description("Stores inbound kafka consumer messages")
@@ -74,7 +80,7 @@ public class IntegrationFlowsConfig {
 						new DefaultKafkaConsumerFactory<String, String>(kafkaProperties.buildConsumerProperties()),
 						"topic1"))
 				.channel("fromKafka").transform(new PatientDataTransformer()).split(new PatientDataSplitter())
-				.handle(new PatientServiceActivator()).get();
+				.handle(new PatientSoapServiceActivator()).get();
 	}
 
 }

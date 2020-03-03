@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.epis.integration.dsl;
+package org.epis.integration.dsl.common;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

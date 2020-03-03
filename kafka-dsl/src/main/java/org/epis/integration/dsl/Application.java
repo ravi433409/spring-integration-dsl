@@ -22,10 +22,11 @@ import java.util.Map;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.epis.integration.dsl.common.KafkaAppProperties;
 import org.epis.integration.dsl.dao.SavePatientDao;
 import org.epis.integration.dsl.splitter.PatientDataSplitter;
 import org.epis.integration.dsl.transformer.PatientDataTransformer;
-import org.epis.integration.dsl.ws.PatientServiceActivator;
+import org.epis.integration.dsl.ws.PatientSoapServiceActivator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -77,24 +78,19 @@ public class Application {
 		MessageChannel toKafka = context.getBean("toKafka", MessageChannel.class);
 		System.out.println("Sending 10 messages...");
 		Map<String, Object> headers = Collections.singletonMap(KafkaHeaders.TOPIC, this.properties.getTopic());
-		for (int i = 1000; i < 1030; i++) {
-			System.out.println("sent message " + "foo" + i);
-			int patientId = i;
-			String inputMessage1 = "<PatientID><id>"+patientId+++"</id></PatientID> ";
-			String inputMessage2 = "<PatientID><id>"+patientId+++"</id></PatientID> ";
-			String inputMessage3 = "<PatientID><id>"+patientId+++"</id></PatientID> ";
-			
-			System.out.println("input message"+inputMessage1+inputMessage2+inputMessage3);
-			
-			toKafka.send(new GenericMessage<>(inputMessage1+inputMessage2+inputMessage3, headers));
-		}
-		System.out.println("Sending a null message...");
-	//	toKafka.send(new GenericMessage<>(KafkaNull.INSTANCE, headers));
-		
-		
-		
-		
+		for (int patientId = 1000; patientId < 1030; patientId++) {
+			// System.out.println("sent message " + "foo" + i);
+			// int patientId = i;
+			String inputMessage1 = "<PatientID><id>" + patientId++ + "</id></PatientID> ";
+			String inputMessage2 = "<PatientID><id>" + patientId++ + "</id></PatientID> ";
+			String inputMessage3 = "<PatientID><id>" + patientId + "</id></PatientID> ";
 
+			System.out.println("xml request sent to kafka broker" + inputMessage1 + inputMessage2 + inputMessage3);
+
+			toKafka.send(new GenericMessage<>(inputMessage1 + inputMessage2 + inputMessage3, headers));
+		}
+		// System.out.println("Sending a null message...");
+		// toKafka.send(new GenericMessage<>(KafkaNull.INSTANCE, headers));
 
 		/*
 		 * PollableChannel fromKafka = context.getBean("fromKafka",
@@ -107,9 +103,16 @@ public class Application {
 		System.out.println("Adding an adapter for a second topic and sending 10 messages...");
 		addAnotherListenerForTopics(this.properties.getNewTopic());
 		headers = Collections.singletonMap(KafkaHeaders.TOPIC, this.properties.getNewTopic());
-		for (int i = 0; i < 10; i++) {
-			System.out.println("sent message " + "bar" + i);
-			toKafka.send(new GenericMessage<>("bar" + i, headers));
+		for (int patientId = 2000; patientId < 10; patientId++) {
+			// int patientId = i;
+
+			String inputMessage1 = "<PatientID><id>" + patientId++ + "</id></PatientID> ";
+			String inputMessage2 = "<PatientID><id>" + patientId++ + "</id></PatientID> ";
+			String inputMessage3 = "<PatientID><id>" + patientId + "</id></PatientID> ";
+
+			System.out.println("xml request sent to kafka broker" + inputMessage1 + inputMessage2 + inputMessage3);
+
+			toKafka.send(new GenericMessage<>(inputMessage1 + inputMessage2 + inputMessage3, headers));
 		}
 		/*
 		 * received = fromKafka.receive(10000); count = 0; while (received != null) {
@@ -154,7 +157,8 @@ public class Application {
 		consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG,
 				consumerProperties.get(ConsumerConfig.GROUP_ID_CONFIG) + "x");
 
-		// TODO as per new latest api spring integration flow registration need to be done dynamically 
+		// TODO as per new latest api spring integration flow registration need to be
+		// done dynamically
 		IntegrationFlow flow = fromKafkaFlow(consumerProperties);
 
 		this.flowContext.registration(flow).register();
@@ -166,11 +170,8 @@ public class Application {
 				.from(Kafka.messageDrivenChannelAdapter(
 						new DefaultKafkaConsumerFactory<String, String>(consumerProperties), "topic1", "topic2"))
 				.channel("requestChannel").split(new PatientDataSplitter()).transform(new PatientDataTransformer())
-				.handle(new PatientServiceActivator()).handle(new SavePatientDao()).get();
+				.handle(new PatientSoapServiceActivator()).handle(new SavePatientDao()).get();
 		return flow;
 	}
-	
-	
-
 
 }

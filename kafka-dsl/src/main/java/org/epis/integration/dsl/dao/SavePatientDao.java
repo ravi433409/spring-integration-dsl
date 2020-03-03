@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class SavePatientDao {
 	
-	@ServiceActivator()
+	@ServiceActivator(inputChannel="dabaseStoreChannel")
 	public void savePatiendDataToDB() {
 		PatientDataTO patientData = new PatientDataTO();
 				patientData.setDaysSupply("2");
@@ -15,7 +15,7 @@ public class SavePatientDao {
 				patientData.setRxNumber("rxno1234543");
 				patientData.setStorenum("abc123");
 			String jsonDocument = 	patientData.toString();
-			System.out.println("json document"+jsonDocument);
+			System.out.println("saving json document to mongodb database"+jsonDocument);
 		
 	}
 

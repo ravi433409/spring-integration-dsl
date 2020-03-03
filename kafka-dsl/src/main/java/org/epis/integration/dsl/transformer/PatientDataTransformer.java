@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 public class PatientDataTransformer {
 	@Transformer(inputChannel = "requestChannel")
 	public String transformInternationalCargo(String message) {
-		System.out.println("success transformer message" + message);
+		System.out.println("success transformed message" + message);
 		return message;
 	}
 
